@@ -46,9 +46,9 @@ p { font-size: 13px; color: var(--text-light); }
 .order-card { border-left: 4px solid var(--rider); }
 .order-card.new { border-left-color: var(--danger); animation: newPulse 1.5s infinite; }
 @keyframes newPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
-.order-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
-.order-row span:first-child { color: var(--text-light); }
-.order-row span:last-child { font-weight: 600; color: var(--text); }
+.order-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; gap: 8px; }
+.order-row span:first-child { color: var(--text-light); flex-shrink: 0; }
+.order-row span:last-child { font-weight: 600; color: var(--text); text-align: right; }
 .earn-badge { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 .status-chip { font-size: 11px; padding: 4px 10px; border-radius: 20px; background: #dcfce7; color: #166534; font-weight: 600; }
 #riderMap { width: 100%; height: 300px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--border); }
@@ -112,19 +112,10 @@ p { font-size: 13px; color: var(--text-light); }
   function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(window._t); window._t = setTimeout(() => t.classList.remove("show"), 3000); }
   function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
 
-  // ============================================
-  // FCM PUSH NOTIFICATION SETUP
-  // Saves token ONLY to device_tokens collection (clean)
-  // ============================================
   async function requestFcmToken() {
-    if (!window.FcmBridge) {
-      console.log('FCM: Not running inside SwatGo native app — skipping');
-      return;
-    }
-    console.log('FCM: Requesting token from native app...');
+    if (!window.FcmBridge) return;
     window.onFcmTokenReceived = async function(token) {
-      if (!token) { console.log('FCM: Token not available'); return; }
-      console.log('FCM: Got token:', token);
+      if (!token) return;
       localStorage.setItem('swatgo_fcm_token', token);
       await saveFcmTokenToFirestore(token);
     };
@@ -132,18 +123,13 @@ p { font-size: 13px; color: var(--text-light); }
   }
 
   async function saveFcmTokenToFirestore(token) {
-    if (!state.rider) { console.log('FCM: No rider logged in, skip save'); return; }
+    if (!state.rider) return;
     try {
       const phoneKey = state.rider.phone.replace(/[^0-9]/g, '');
       await setDoc(doc(db, 'device_tokens', 'rider_' + phoneKey), {
-        token: token,
-        userType: 'rider',
-        userId: state.rider.phone,
-        userName: state.rider.name,
-        updatedAt: new Date().toISOString(),
-        platform: 'android'
+        token: token, userType: 'rider', userId: state.rider.phone, userName: state.rider.name,
+        updatedAt: new Date().toISOString(), platform: 'android'
       }, { merge: true });
-      console.log('FCM: Token saved to Firestore ✅ rider_' + phoneKey);
     } catch (e) { console.error('FCM: Save failed:', e); }
   }
 
@@ -152,7 +138,6 @@ p { font-size: 13px; color: var(--text-light); }
     try {
       const phoneKey = state.rider.phone.replace(/[^0-9]/g, '');
       await deleteDoc(doc(db, 'device_tokens', 'rider_' + phoneKey));
-      console.log('FCM: Token removed from Firestore');
     } catch (e) { console.error('FCM: Remove failed:', e); }
   }
 
@@ -272,12 +257,96 @@ p { font-size: 13px; color: var(--text-light); }
     } catch (e) { console.error(e); toast("Failed"); }
   }
 
+  // ============================================
+  // SHOW & NAVIGATE FUNCTIONS
+  // ============================================
+  function showPickupLocation(orderId) {
+    const o = state.availableOrders.find(x => x.id === orderId) || state.activeOrder;
+    if (!o) return toast("Order not found");
+    const pickup = o.pickup || {};
+    const shopName = pickup.name || (o.items && o.items[0] && o.items[0].shopName) || 'Store';
+    const shopAddr = pickup.address || '';
+    const query = shopAddr ? `${shopName}, ${shopAddr}` : shopName;
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, "_blank");
+  }
+
+  function showDeliveryLocation(orderId) {
+    const o = state.availableOrders.find(x => x.id === orderId) || state.activeOrder;
+    if (!o) return toast("Order not found");
+    const addr = o.address || {};
+    if (addr.lat && addr.lng) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${addr.lat},${addr.lng}`, "_blank");
+    } else if (addr.details) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr.details)}`, "_blank");
+    } else {
+      toast("No delivery address");
+    }
+  }
+
+  function navigateToPickup() {
+    const active = state.activeOrder;
+    if (!active) return toast("No active order");
+    const pickup = active.pickup || {};
+    const shopName = pickup.name || (active.items && active.items[0] && active.items[0].shopName) || 'Store';
+    const shopAddr = pickup.address || '';
+    const query = shopAddr ? `${shopName}, ${shopAddr}` : shopName;
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`, "_blank");
+  }
+
+  function navigateToCustomer() {
+    const active = state.activeOrder;
+    if (!active) return toast("No active order");
+    const addr = active.address || {};
+    if (addr.lat && addr.lng) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${addr.lat},${addr.lng}`, "_blank");
+    } else if (addr.details) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr.details)}`, "_blank");
+    } else {
+      toast("No customer address");
+    }
+  }
+
   function renderHome() {
     const active = state.activeOrder;
+    const pickupName = active?.pickup?.name || active?.items?.[0]?.shopName || 'Store';
+    const pickupAddr = active?.pickup?.address || '';
+    const pickupDisplay = pickupAddr ? `${pickupName}, ${pickupAddr}` : pickupName;
+    const deliverAddr = active?.address?.details || 'Customer address';
+
     return `<div class="online-toggle"><div><h3>${state.isOnline ? '🟢 You are Online' : '🔴 You are Offline'}</h3><p style="margin-top:4px;">${state.isOnline ? 'Ready to accept orders' : 'Toggle to accept orders'}</p></div><div class="toggle-switch ${state.isOnline?'on':''}" onclick="toggleOnline()"></div></div>
-      ${active ? `<h2>Active Delivery</h2><div class="card order-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><b>#${active.id}</b><span class="earn-badge">Rs ${active.riderEarning}</span></div><div class="order-row"><span>Pickup from:</span><span>${active.items[0]?.shopName || 'Store'}</span></div><div class="order-row"><span>Deliver to:</span><span>${active.address?.details || 'Customer'}</span></div><div class="order-row"><span>Total:</span><span>Rs ${active.total}</span></div><div id="riderMap" style="margin-top:12px;"></div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button class="btn btn-dark btn-block" onclick="openGoogleMapsNav('${active.address?.details}')">🧭 Navigate</button>${active.status === 'Rider Assigned' ? `<button class="btn btn-primary btn-block" onclick="updateOrderStatus('Picked Up')">✅ Confirm Pickup</button>` : ''}${active.status === 'Picked Up' ? `<button class="btn btn-primary btn-block" onclick="updateOrderStatus('On the Way')">🛵 On the Way</button>` : ''}${active.status === 'On the Way' ? `<button class="btn btn-primary btn-block" onclick="completeDelivery()">🎉 Confirm Delivery</button>` : ''}</div></div>` : ''}
+      ${active ? `<h2>Active Delivery</h2><div class="card order-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><b>#${active.id}</b><span class="earn-badge">Rs ${active.riderEarning}</span></div>
+        <div class="order-row"><span>Pickup from:</span><span style="max-width:65%;">${pickupDisplay}</span></div>
+        <div class="order-row"><span>Deliver to:</span><span style="max-width:65%;">${deliverAddr}</span></div>
+        <div class="order-row"><span>Total:</span><span>Rs ${active.total}</span></div>
+        <div id="riderMap" style="margin-top:12px;"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button class="btn btn-dark btn-block" onclick="navigateToPickup()">🏪 Navigate to Pickup Location</button>
+          <button class="btn btn-dark btn-block" onclick="navigateToCustomer()">🏠 Navigate to Delivery Location</button>
+          ${active.status === 'Rider Assigned' ? `<button class="btn btn-primary btn-block" onclick="updateOrderStatus('Picked Up')">✅ Confirm Pickup</button>` : ''}
+          ${active.status === 'Picked Up' ? `<button class="btn btn-primary btn-block" onclick="updateOrderStatus('On the Way')">🛵 On the Way</button>` : ''}
+          ${active.status === 'On the Way' ? `<button class="btn btn-primary btn-block" onclick="completeDelivery()">🎉 Confirm Delivery</button>` : ''}
+        </div>
+      </div>` : ''}
       <h2 style="${active ? 'margin-top:20px;' : ''}">${active ? '🔔 New Orders (' + state.availableOrders.length + ')' : 'Available Orders' + (state.availableOrders.length > 0 ? ' (' + state.availableOrders.length + ')' : '')}</h2>
-      ${state.availableOrders.length === 0 ? `<div class="empty"><span class="big">📭</span>No ready orders yet<br><span style="font-size:12px;">You'll be notified when a store marks an order ready</span></div>` : state.availableOrders.map(o => `<div class="card order-card new" style="border-left-color:${active ? '#f59e0b' : '#ef4444'};"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><b>#${o.id}</b><span class="earn-badge">Rs 120</span></div><div class="order-row"><span>Pickup from:</span><span>${o.items?.[0]?.shopName || 'Store'}</span></div><div class="order-row"><span>Customer:</span><span>${o.address?.details?.slice(0,30) || 'Customer'}</span></div><div class="order-row"><span>Items:</span><span>${o.items?.length || 0}</span></div>${active ? `<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:8px;font-size:12px;margin-top:10px;text-align:center;">⚠️ Finish current delivery first</div>` : `<button class="btn btn-primary btn-block" style="margin-top:10px;" onclick="acceptOrder('${o.id}')">Accept Order</button>`}</div>`).join("")}`;
+      ${state.availableOrders.length === 0 ? `<div class="empty"><span class="big">📭</span>No ready orders yet<br><span style="font-size:12px;">You'll be notified when a store marks an order ready</span></div>` : state.availableOrders.map(o => {
+        const shopName = o.pickup?.name || o.items?.[0]?.shopName || 'Store';
+        const shopAddr = o.pickup?.address || '';
+        const displayPickup = shopAddr ? `${shopName}, ${shopAddr}` : shopName;
+        return `<div class="card order-card new" style="border-left-color:${active ? '#f59e0b' : '#ef4444'};">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><b>#${o.id}</b><span class="earn-badge">Rs 120</span></div>
+          <div class="order-row"><span>Pickup from:</span><span style="max-width:65%;">${displayPickup}</span></div>
+          <div class="order-row"><span>Deliver to:</span><span style="max-width:65%;">${o.address?.details || 'Customer'}</span></div>
+          <div class="order-row"><span>Items:</span><span>${o.items?.length || 0}</span></div>
+          ${active ? `<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:8px;font-size:12px;margin-top:10px;text-align:center;">⚠️ Finish current delivery first</div>` : `
+            <div style="display:flex;gap:6px;margin-top:12px;">
+              <button class="btn btn-outline" style="flex:1;padding:8px 6px;font-size:11px;" onclick="showPickupLocation('${o.id}')">🏪 Show Pickup</button>
+              <button class="btn btn-outline" style="flex:1;padding:8px 6px;font-size:11px;" onclick="showDeliveryLocation('${o.id}')">🏠 Show Delivery</button>
+            </div>
+            <button class="btn btn-primary btn-block" style="margin-top:8px;" onclick="acceptOrder('${o.id}')">✅ Accept Order</button>
+          `}
+        </div>`;
+      }).join("")}`;
   }
 
   function renderOrders() {
@@ -307,7 +376,9 @@ p { font-size: 13px; color: var(--text-light); }
   async function checkRider() {
     const input = document.getElementById('rPhone').value.trim(); if (!input) return toast("Enter phone");
     let phone = input.replace(/[\s\-()]/g, "");
-    if (phone.startsWith("0")) phone = "+92" + phone.slice(1); else if (phone.startsWith("92") && !phone.startsWith("+")) phone = "+" + phone; else if (!phone.startsWith("+")) phone = "+92" + phone;
+    if (phone.startsWith("0")) phone = "+92" + phone.slice(1);
+    else if (phone.startsWith("92") && !phone.startsWith("+")) phone = "+" + phone;
+    else if (!phone.startsWith("+")) phone = "+92" + phone;
     window._phone = phone; toast("Checking...");
     try {
       const snap = await getDoc(doc(db, "riders", phone));
@@ -352,8 +423,6 @@ p { font-size: 13px; color: var(--text-light); }
     localStorage.clear(); render(); toast("Logged out");
   }
 
-  function openGoogleMapsNav(address) { if (!address) return toast("No address"); window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`, "_blank"); }
-
   function render() {
     const app = document.getElementById("app"); let html = "";
     if (state.tab === "home") html = renderHome();
@@ -382,7 +451,7 @@ p { font-size: 13px; color: var(--text-light); }
   if (state.rider) requestFcmToken();
   if (state.activeOrder) startLocationBroadcast(state.activeOrder.id);
 
-  window.toggleOnline = toggleOnline; window.acceptOrder = acceptOrder; window.updateOrderStatus = updateOrderStatus; window.completeDelivery = completeDelivery; window.openGoogleMapsNav = openGoogleMapsNav; window.openAuth = openAuth; window.checkRider = checkRider; window.backToStep1 = backToStep1; window.completeSignup = completeSignup; window.logout = logout; window.editBike = editBike; window.requestPayout = requestPayout; window.closeModal = closeModal; window.toast = toast; window.goToAvailableOrders = goToAvailableOrders;
+  window.toggleOnline = toggleOnline; window.acceptOrder = acceptOrder; window.updateOrderStatus = updateOrderStatus; window.completeDelivery = completeDelivery; window.openGoogleMapsNav = openGoogleMapsNav; window.navigateToPickup = navigateToPickup; window.navigateToCustomer = navigateToCustomer; window.showPickupLocation = showPickupLocation; window.showDeliveryLocation = showDeliveryLocation; window.openAuth = openAuth; window.checkRider = checkRider; window.backToStep1 = backToStep1; window.completeSignup = completeSignup; window.logout = logout; window.editBike = editBike; window.requestPayout = requestPayout; window.closeModal = closeModal; window.toast = toast; window.goToAvailableOrders = goToAvailableOrders;
 </script>
 </body>
 </html>
