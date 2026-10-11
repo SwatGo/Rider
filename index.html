@@ -3,81 +3,166 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="theme-color" content="#22c55e" />
+<meta name="theme-color" content="#059669" />
 <title>SwatGo Rider</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLf8FDyUoWTFsiMu20azhnscWkiyCDE24"></script>
 <style>
-:root { --primary: #0f172a; --rider: #22c55e; --accent: #f59e0b; --danger: #ef4444; --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --text-light: #64748b; --border: #e2e8f0; }
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-body { background: var(--bg); display: flex; justify-content: center; min-height: 100vh; }
-.app { width: 100%; max-width: 480px; background: var(--bg); min-height: 100vh; position: relative; padding-bottom: 75px; }
-#splash { position: fixed; inset: 0; background: var(--rider); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
-#splash h1 { font-size: 36px; letter-spacing: 3px; margin-bottom: 10px; }
-#splash .loader { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-top: 20px; }
+:root {
+  --brand: #059669;
+  --brand-dark: #047857;
+  --brand-light: #D1FAE5;
+  --accent: #F59E0B;
+  --accent-light: #FEF3C7;
+  --success: #10B981;
+  --danger: #EF4444;
+  --info: #3B82F6;
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --text: #0F172A;
+  --text-light: #64748B;
+  --text-soft: #94A3B8;
+  --border: #E2E8F0;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.08);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --input-bg: #FFFFFF;
+}
+body.dark {
+  --bg: #0F172A;
+  --card: #1E293B;
+  --text: #F1F5F9;
+  --text-light: #94A3B8;
+  --text-soft: #64748B;
+  --border: #334155;
+  --input-bg: #1E293B;
+  --brand-light: rgba(5, 150, 105, 0.2);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); display: flex; justify-content: center; min-height: 100vh; color: var(--text); transition: background 0.3s; }
+.app { width: 100%; max-width: 480px; background: var(--bg); min-height: 100vh; position: relative; padding-bottom: 88px; }
+
+#splash { position: fixed; inset: 0; background: linear-gradient(135deg, #059669, #047857); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
+#splash h1 { font-size: 38px; font-weight: 800; letter-spacing: -1px; margin-bottom: 6px; animation: splashIn 0.6s ease; }
+#splash p { color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 500; animation: splashIn 0.8s ease; }
+#splash .loader { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.25); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 28px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.topbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--primary); color: #fff; position: sticky; top: 0; z-index: 10; }
-.topbar h1 { font-size: 18px; }
-.topbar .status { font-size: 11px; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.15); cursor: pointer; }
-.topbar .status.online { background: var(--rider); }
-main { padding: 16px; }
-h2 { font-size: 18px; margin-bottom: 12px; color: var(--text); font-weight: 600; }
-h3 { font-size: 16px; color: var(--text); }
-p { font-size: 13px; color: var(--text-light); }
-.card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02); }
-.online-toggle { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 16px; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-.toggle-switch { width: 60px; height: 32px; background: #cbd5e1; border-radius: 20px; position: relative; cursor: pointer; transition: background 0.3s; flex-shrink: 0; }
-.toggle-switch.on { background: var(--rider); }
+@keyframes splashIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+.topbar { padding: 16px 20px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #fff; position: sticky; top: 0; z-index: 10; overflow: hidden; }
+.topbar::after { content: ''; position: absolute; top: -60px; right: -60px; width: 160px; height: 160px; background: rgba(255,255,255,0.08); border-radius: 50%; pointer-events: none; }
+.topbar::before { content: ''; position: absolute; bottom: -40px; left: -40px; width: 120px; height: 120px; background: rgba(255,255,255,0.06); border-radius: 50%; pointer-events: none; }
+.topbar-top { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; gap: 10px; }
+.topbar h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; }
+.topbar .status { font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.18); cursor: pointer; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; }
+.topbar .status.online { background: var(--accent); border-color: var(--accent); }
+.topbar .status:active { transform: scale(0.95); }
+
+main { padding: 18px 16px; }
+h2 { font-size: 17px; margin-bottom: 12px; color: var(--text); font-weight: 800; letter-spacing: -0.3px; display: flex; align-items: center; gap: 6px; }
+h3 { font-size: 15px; color: var(--text); font-weight: 700; }
+p { font-size: 13px; color: var(--text-light); line-height: 1.5; }
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-md); position: relative; overflow: hidden; border: 1px solid rgba(226,232,240,0.5); animation: cardIn 0.4s ease backwards; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+.online-toggle { display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 16px; border-radius: var(--radius); margin-bottom: 12px; box-shadow: var(--shadow-md); border: 1px solid rgba(226,232,240,0.5); }
+.toggle-switch { width: 60px; height: 32px; background: #CBD5E1; border-radius: 20px; position: relative; cursor: pointer; transition: background 0.3s; flex-shrink: 0; }
+.toggle-switch.on { background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
 .toggle-switch::after { content: ''; position: absolute; width: 26px; height: 26px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: left 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .toggle-switch.on::after { left: 31px; }
-.bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; background: #fff; border-top: 1px solid var(--border); padding: 10px 0; z-index: 100; }
-.bottom-nav button { background: none; border: none; display: flex; flex-direction: column; align-items: center; font-size: 20px; color: #94a3b8; cursor: pointer; position: relative; flex: 1; padding: 4px; }
-.bottom-nav button span.lbl { font-size: 10px; margin-top: 4px; font-weight: 500; }
-.bottom-nav button.active { color: var(--rider); font-weight: 700; }
-.badge { position: absolute; top: -2px; right: 22%; background: var(--danger); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; border: 2px solid #fff; animation: badgePulse 1.5s infinite; }
+
+.bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; background: var(--card); border-top: 1px solid var(--border); padding: 8px 0 12px; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.04); }
+.bottom-nav button { background: none; border: none; display: flex; flex-direction: column; align-items: center; font-size: 10px; font-weight: 600; color: var(--text-soft); cursor: pointer; position: relative; flex: 1; padding: 4px; gap: 3px; }
+.bottom-nav button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: all 0.2s; }
+.bottom-nav button.active { color: var(--brand); }
+.bottom-nav button.active svg { stroke-width: 2.5; }
+.bottom-nav button.active::before { content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 32px; height: 32px; background: var(--brand-light); border-radius: 12px; z-index: -1; }
+.badge { position: absolute; top: 0px; right: 22%; background: var(--danger); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 800; border: 2px solid var(--card); animation: badgePulse 1.5s infinite; }
 @keyframes badgePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 .hidden { display: none !important; }
-.btn { border: none; border-radius: 10px; padding: 12px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
-.btn-primary { background: var(--rider); color: #fff; }
-.btn-dark { background: var(--primary); color: #fff; }
-.btn-danger { background: var(--danger); color: #fff; }
-.btn-outline { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+
+.btn { border: none; border-radius: 12px; padding: 12px 18px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+.btn:active { transform: scale(0.96); }
+.btn-primary { background: linear-gradient(135deg, #059669, #047857); color: #fff; box-shadow: 0 4px 12px rgba(5,150,105,0.25); }
+.btn-dark { background: linear-gradient(135deg, #0F172A, #1E293B); color: #fff; box-shadow: 0 4px 12px rgba(15,23,42,0.25); }
+.btn-danger { background: linear-gradient(135deg, #EF4444, #DC2626); color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.25); }
+.btn-outline { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 .btn-block { width: 100%; }
-.order-card { border-left: 4px solid var(--rider); }
-.order-card.new { border-left-color: var(--danger); animation: newPulse 1.5s infinite; }
-@keyframes newPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
-.order-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; gap: 8px; }
-.order-row span:first-child { color: var(--text-light); flex-shrink: 0; }
-.order-row span:last-child { font-weight: 600; color: var(--text); text-align: right; }
-.earn-badge { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-.status-chip { font-size: 11px; padding: 4px 10px; border-radius: 20px; background: #dcfce7; color: #166534; font-weight: 600; }
-#riderMap { width: 100%; height: 300px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--border); }
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; max-width: 90%; text-align: center; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
-.empty { text-align: center; color: var(--text-light); padding: 60px 0; font-size: 14px; }
-.empty .big { font-size: 56px; display: block; margin-bottom: 16px; }
-.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; }
-.sheet { background: #fff; width: 100%; max-width: 480px; border-radius: 24px 24px 0 0; padding: 24px; max-height: 90vh; overflow-y: auto; }
-.sheet h3 { margin-bottom: 16px; font-size: 20px; }
-.sheet input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; font-size: 14px; outline: none; }
+
+.order-card { border-left: 4px solid var(--brand); }
+.order-card.new { border-left-color: var(--danger); animation: newPulse 2s infinite; }
+@keyframes newPulse { 0% { box-shadow: var(--shadow-md); } 50% { box-shadow: 0 4px 24px rgba(239,68,68,0.25); } 100% { box-shadow: var(--shadow-md); } }
+.order-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; gap: 10px; }
+.order-row span:first-child { color: var(--text-light); font-weight: 500; flex-shrink: 0; }
+.order-row span:last-child { font-weight: 700; color: var(--text); text-align: right; }
+.earn-badge { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); color: var(--brand-dark); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; font-feature-settings: 'tnum'; }
+.status-chip { font-size: 10px; padding: 5px 12px; border-radius: 20px; background: var(--brand-light); color: var(--brand-dark); font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase; }
+
+#riderMap { width: 100%; height: 300px; border-radius: var(--radius); margin-bottom: 16px; border: 1px solid var(--border); }
+
+/* ============================================
+   TOAST (Colored with icon)
+   ============================================ */
+.toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); padding: 14px 22px; border-radius: 14px; font-size: 13px; font-weight: 700; z-index: 9999; opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; max-width: 90%; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); color: #fff; background: linear-gradient(135deg, #059669, #047857); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast::before { content: '✓'; display: inline-flex; width: 22px; height: 22px; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; border-radius: 50%; background: rgba(255,255,255,0.25); flex-shrink: 0; }
+.toast.error { background: linear-gradient(135deg, #EF4444, #DC2626); }
+.toast.error::before { content: '!'; }
+.toast.info { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+.toast.info::before { content: 'i'; font-family: serif; }
+.toast.warning { background: linear-gradient(135deg, #F59E0B, #D97706); }
+.toast.warning::before { content: '⚠'; font-size: 11px; }
+
+.empty { text-align: center; color: var(--text-light); padding: 50px 20px; font-size: 14px; font-weight: 500; animation: cardIn 0.5s ease; }
+.empty svg { width: 140px; height: 140px; margin: 0 auto 16px; display: block; opacity: 0.9; }
+.empty h3 { font-size: 17px; color: var(--text); font-weight: 800; margin-bottom: 6px; letter-spacing: -0.3px; }
+.empty p { font-size: 13px; line-height: 1.5; max-width: 260px; margin: 0 auto 18px; }
+
+.skeleton { background: linear-gradient(90deg, var(--border) 25%, rgba(226,232,240,0.4) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skeleton-card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; display: flex; gap: 12px; box-shadow: var(--shadow-sm); }
+.skeleton-circle { width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0; }
+.skeleton-lines { flex: 1; display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+.skeleton-line { height: 12px; }
+.skeleton-line.short { width: 60%; }
+
+.overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s; backdrop-filter: blur(4px); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.sheet { background: var(--card); width: 100%; max-width: 480px; border-radius: 28px 28px 0 0; padding: 8px 24px 24px; max-height: 90vh; overflow-y: auto; color: var(--text); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet::before { content: ''; display: block; width: 40px; height: 4px; background: #CBD5E1; border-radius: 2px; margin: 8px auto 16px; }
+.sheet h3 { margin-bottom: 16px; font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+.sheet input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; font-size: 14px; outline: none; background: var(--input-bg); color: var(--text); font-weight: 500; transition: all 0.2s; font-family: inherit; }
+.sheet input:focus { border-color: var(--brand); box-shadow: 0 0 0 4px rgba(5,150,105,0.1); }
+
 .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.stat-box { background: #fff; padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); text-align: center; }
-.stat-box .num { font-size: 22px; font-weight: 700; color: var(--rider); }
-.stat-box .lbl { font-size: 11px; color: var(--text-light); text-transform: uppercase; margin-top: 4px; }
-#notifBanner { position: fixed; top: 62px; left: 50%; transform: translateX(-50%); z-index: 500; background: var(--danger); color: #fff; padding: 12px 20px; border-radius: 14px; box-shadow: 0 6px 20px rgba(239,68,68,0.4); font-size: 13px; font-weight: 600; cursor: pointer; display: none; max-width: 90%; text-align: center; animation: slideDown 0.4s; }
-@keyframes slideDown { from { top: -100px; opacity: 0; } to { top: 62px; opacity: 1; } }
+.stat-box { background: var(--card); padding: 16px; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); text-align: center; border: 1px solid rgba(226,232,240,0.5); }
+.stat-box .num { font-size: 22px; font-weight: 800; color: var(--brand); font-feature-settings: 'tnum'; letter-spacing: -0.5px; }
+.stat-box .lbl { font-size: 10px; color: var(--text-light); text-transform: uppercase; margin-top: 4px; font-weight: 700; letter-spacing: 0.5px; }
+
+#notifBanner { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); z-index: 500; background: linear-gradient(135deg, #EF4444, #DC2626); color: #fff; padding: 14px 22px; border-radius: 14px; box-shadow: 0 8px 24px rgba(239,68,68,0.4); font-size: 13px; font-weight: 700; cursor: pointer; display: none; max-width: 90%; text-align: center; animation: slideDown 0.4s; }
+@keyframes slideDown { from { top: -100px; opacity: 0; } to { top: 72px; opacity: 1; } }
+
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 </style>
 </head>
 <body>
 <div id="splash"><h1>SwatGo</h1><p>Rider Partner</p><div class="loader"></div></div>
 <div class="app">
-  <header class="topbar"><h1>🛵 SwatGo Rider</h1><div class="status" id="statusBadge" onclick="toggleOnline()">Offline</div></header>
+  <header class="topbar">
+    <div class="topbar-top">
+      <h1>🛵 SwatGo Rider</h1>
+      <div class="status" id="statusBadge" onclick="toggleOnline()">Offline</div>
+    </div>
+  </header>
   <main id="app"></main>
   <nav class="bottom-nav">
-    <button data-tab="home" class="active">🏠<span class="lbl">Home</span></button>
-    <button data-tab="orders">📦<span class="lbl">Orders</span><span id="orderBadge" class="badge hidden">0</span></button>
-    <button data-tab="earnings">💰<span class="lbl">Earnings</span></button>
-    <button data-tab="profile">👤<span class="lbl">Profile</span></button>
+    <button data-tab="home" class="active"><svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button data-tab="orders"><svg viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>History<span id="orderBadge" class="badge hidden">0</span></button>
+    <button data-tab="earnings"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Earnings</button>
+    <button data-tab="profile"><svg viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
   </nav>
 </div>
 <div id="notifBanner" onclick="goToAvailableOrders()"></div>
@@ -109,12 +194,9 @@ p { font-size: 13px; color: var(--text-light); }
     localStorage.setItem("syedgo_rider_active", JSON.stringify(state.activeOrder));
     localStorage.setItem("syedgo_rider_completed", JSON.stringify(state.completedOrders));
   }
-  function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(window._t); window._t = setTimeout(() => t.classList.remove("show"), 3000); }
+  function toast(msg, type) { const t = document.getElementById("toast"); t.textContent = msg; t.className = "toast " + (type || ""); t.classList.add("show"); clearTimeout(window._t); window._t = setTimeout(() => t.classList.remove("show"), 2600); }
   function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
 
-  // ============================================
-  // FCM
-  // ============================================
   async function requestFcmToken() {
     if (!window.FcmBridge) return;
     window.onFcmTokenReceived = async function(token) {
@@ -144,33 +226,15 @@ p { font-size: 13px; color: var(--text-light); }
     } catch (e) { console.error('FCM: Remove failed:', e); }
   }
 
-  // ============================================
-  // EXTERNAL URL OPENER (Bridge-based)
-  // ============================================
   function openExternalUrl(url) {
     console.log('=== OPEN EXTERNAL URL:', url);
-    // Method 1: Direct bridge to Flutter native app (most reliable)
     if (window.AndroidBridge && typeof window.AndroidBridge.postMessage === 'function') {
-      console.log('=== SENDING VIA BRIDGE ===');
-      try {
-        window.AndroidBridge.postMessage(url);
-        return;
-      } catch (e) { console.error('Bridge failed:', e); }
+      try { window.AndroidBridge.postMessage(url); return; } catch (e) { console.error('Bridge failed:', e); }
     }
-    // Method 2: window.open (works in browsers)
-    if (window.open) {
-      console.log('=== SENDING VIA WINDOW.OPEN ===');
-      window.open(url, '_blank');
-      return;
-    }
-    // Method 3: Direct navigation (last resort)
-    console.log('=== SENDING VIA LOCATION.HREF ===');
+    if (window.open) { window.open(url, '_blank'); return; }
     window.location.href = url;
   }
 
-  // ============================================
-  // SOUND / VIBRATE
-  // ============================================
   function playOrderSound() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -198,17 +262,17 @@ p { font-size: 13px; color: var(--text-light); }
   }
 
   function goToAvailableOrders() { state.tab = "home"; render(); window.scrollTo(0, 0); }
-  function newOrderAlert(count) { playOrderSound(); vibrate(); toast(`🔔 ${count} new ready order${count > 1 ? 's' : ''}!`); }
+  function newOrderAlert(count) { playOrderSound(); vibrate(); toast(`🔔 ${count} new ready order${count > 1 ? 's' : ''}!`, "warning"); }
 
   function startLocationBroadcast(orderId) {
-    if (!navigator.geolocation) return toast("GPS not supported");
+    if (!navigator.geolocation) return toast("GPS not supported", "error");
     state.watchId = navigator.geolocation.watchPosition(
       async (position) => {
         const { latitude, longitude, accuracy } = position.coords;
         try { await setDoc(doc(db, "rider_locations", orderId), { location: { latitude, longitude }, accuracy, riderId: state.rider.phone, riderName: state.rider.name, orderId, updatedAt: serverTimestamp() }, { merge: true }); } catch (e) { console.error(e); }
         if (state.myMap && state.myMarker) { const pos = { lat: latitude, lng: longitude }; state.myMarker.setPosition(pos); state.myMap.panTo(pos); }
       },
-      (err) => { console.error(err); toast(err.code === 1 ? "GPS denied" : "GPS error"); },
+      (err) => { console.error(err); toast(err.code === 1 ? "GPS denied" : "GPS error", "error"); },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }
@@ -218,7 +282,7 @@ p { font-size: 13px; color: var(--text-light); }
   function toggleOnline() {
     if (!state.rider) return openAuth();
     state.isOnline = !state.isOnline; saveLocal(); updateStatusBadge();
-    toast(state.isOnline ? "🟢 You are Online" : "🔴 You are Offline"); render();
+    toast(state.isOnline ? "You are Online" : "You are Offline", state.isOnline ? "success" : "info"); render();
   }
 
   function updateStatusBadge() {
@@ -246,7 +310,7 @@ p { font-size: 13px; color: var(--text-light); }
       if (addedIds.length > 0 && !state.isFirstOrderLoad) newOrderAlert(addedIds.length);
       if (state.isFirstOrderLoad) {
         state.isFirstOrderLoad = false;
-        if (newOrders.length > 0) setTimeout(() => toast(`📦 ${newOrders.length} ready order${newOrders.length > 1 ? 's' : ''} waiting!`), 500);
+        if (newOrders.length > 0) setTimeout(() => toast(`${newOrders.length} ready order${newOrders.length > 1 ? 's' : ''} waiting!`, "info"), 500);
       }
       updateOrderBadge();
       showNotificationBanner(newOrders.length);
@@ -257,8 +321,8 @@ p { font-size: 13px; color: var(--text-light); }
   function updateOrderBadge() { const badge = document.getElementById("orderBadge"); const count = state.availableOrders.length; if (count > 0) { badge.textContent = count; badge.classList.remove("hidden"); } else badge.classList.add("hidden"); }
 
   async function acceptOrder(orderId) {
-    if (!state.rider) return toast("Login first");
-    if (state.activeOrder) return toast("Finish current order first");
+    if (!state.rider) return toast("Login first", "warning");
+    if (state.activeOrder) return toast("Finish current order first", "warning");
     const order = state.availableOrders.find(o => o.id === orderId); if (!order) return;
     if (!state.isOnline) { state.isOnline = true; saveLocal(); updateStatusBadge(); }
     const riderEarning = 120;
@@ -266,14 +330,14 @@ p { font-size: 13px; color: var(--text-light); }
       await updateDoc(doc(db, "orders", orderId), { status: "Rider Assigned", rider: { name: state.rider.name, phone: state.rider.phone, bike: state.rider.bike || "Motorcycle", rating: state.rider.rating || 5.0 }, riderEarning, assignedAt: new Date().toISOString() });
       state.activeOrder = { ...order, riderEarning, acceptedAt: new Date().toISOString(), status: "Rider Assigned" };
       saveLocal(); startLocationBroadcast(orderId); showNotificationBanner(0);
-      toast("Order accepted! 📍"); state.tab = "home"; render();
-    } catch (e) { console.error(e); toast("Failed to accept"); }
+      toast("Order accepted! 📍", "success"); state.tab = "home"; render();
+    } catch (e) { console.error(e); toast("Failed to accept", "error"); }
   }
 
   async function updateOrderStatus(newStatus) {
     if (!state.activeOrder) return;
-    try { await updateDoc(doc(db, "orders", state.activeOrder.id), { status: newStatus, updatedAt: new Date().toISOString() }); state.activeOrder.status = newStatus; saveLocal(); toast("Status: " + newStatus); render(); }
-    catch (e) { console.error(e); toast("Failed"); }
+    try { await updateDoc(doc(db, "orders", state.activeOrder.id), { status: newStatus, updatedAt: new Date().toISOString() }); state.activeOrder.status = newStatus; saveLocal(); toast("Status: " + newStatus, "success"); render(); }
+    catch (e) { console.error(e); toast("Failed", "error"); }
   }
 
   async function completeDelivery() {
@@ -283,72 +347,68 @@ p { font-size: 13px; color: var(--text-light); }
       await updateDoc(doc(db, "orders", state.activeOrder.id), { status: "Delivered", deliveredAt: new Date().toISOString() });
       state.completedOrders.unshift({ ...state.activeOrder, deliveredAt: new Date().toISOString() });
       stopLocationBroadcast(); state.activeOrder = null; saveLocal();
-      toast("Delivered! 🎉 Earned Rs 120"); render();
-    } catch (e) { console.error(e); toast("Failed"); }
+      toast("Delivered! Earned Rs 120 🎉", "success"); render();
+    } catch (e) { console.error(e); toast("Failed", "error"); }
   }
 
   // ============================================
-  // SHOW & NAVIGATE FUNCTIONS (Bridge-based)
+  // NAVIGATION HELPERS
   // ============================================
   function showPickupLocation(orderId) {
     const o = state.availableOrders.find(x => x.id === orderId) || state.activeOrder;
-    if (!o) return toast("Order not found");
+    if (!o) return toast("Order not found", "error");
     const pickup = o.pickup || {};
     const shopName = pickup.name || (o.items && o.items[0] && o.items[0].shopName) || 'Store';
     const shopAddr = pickup.address || '';
     const query = shopAddr ? `${shopName}, ${shopAddr}` : shopName;
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-    console.log('=== SHOW PICKUP:', url);
     openExternalUrl(url);
   }
 
   function showDeliveryLocation(orderId) {
     const o = state.availableOrders.find(x => x.id === orderId) || state.activeOrder;
-    if (!o) return toast("Order not found");
+    if (!o) return toast("Order not found", "error");
     const addr = o.address || {};
     let url;
-    if (addr.lat && addr.lng) {
-      url = `https://www.google.com/maps/search/?api=1&query=${addr.lat},${addr.lng}`;
-    } else if (addr.details) {
-      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr.details)}`;
-    } else {
-      return toast("No delivery address");
-    }
-    console.log('=== SHOW DELIVERY:', url);
+    if (addr.lat && addr.lng) url = `https://www.google.com/maps/search/?api=1&query=${addr.lat},${addr.lng}`;
+    else if (addr.details) url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr.details)}`;
+    else return toast("No delivery address", "error");
     openExternalUrl(url);
   }
 
   function navigateToPickup() {
     const active = state.activeOrder;
-    if (!active) return toast("No active order");
+    if (!active) return toast("No active order", "error");
     const pickup = active.pickup || {};
     const shopName = pickup.name || (active.items && active.items[0] && active.items[0].shopName) || 'Store';
     const shopAddr = pickup.address || '';
     const query = shopAddr ? `${shopName}, ${shopAddr}` : shopName;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&travelmode=driving`;
-    console.log('=== NAVIGATE TO PICKUP:', url);
     openExternalUrl(url);
   }
 
   function navigateToCustomer() {
     const active = state.activeOrder;
-    if (!active) return toast("No active order");
+    if (!active) return toast("No active order", "error");
     const addr = active.address || {};
     let url;
-    if (addr.lat && addr.lng) {
-      url = `https://www.google.com/maps/dir/?api=1&destination=${addr.lat},${addr.lng}&travelmode=driving`;
-    } else if (addr.details) {
-      url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr.details)}&travelmode=driving`;
-    } else {
-      return toast("No customer address");
-    }
-    console.log('=== NAVIGATE TO CUSTOMER:', url);
+    if (addr.lat && addr.lng) url = `https://www.google.com/maps/dir/?api=1&destination=${addr.lat},${addr.lng}&travelmode=driving`;
+    else if (addr.details) url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr.details)}&travelmode=driving`;
+    else return toast("No customer address", "error");
     openExternalUrl(url);
   }
 
-  // ============================================
-  // RENDER HOME
-  // ============================================
+  // EMPTY ILLUSTRATIONS
+  function emptyDeliverySVG() {
+    return `<svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="70" fill="#D1FAE5" opacity="0.5"/><circle cx="70" cy="130" r="12" stroke="#059669" stroke-width="3" fill="white"/><circle cx="130" cy="130" r="12" stroke="#059669" stroke-width="3" fill="white"/><path d="M60 130V80h50l20 30h20v20" stroke="#059669" stroke-width="3" fill="white" stroke-linejoin="round"/><path d="M60 100h40" stroke="#059669" stroke-width="3" stroke-linecap="round"/></svg>`;
+  }
+  function emptyHistorySVG() {
+    return `<svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="70" fill="#FEF3C7" opacity="0.5"/><rect x="60" y="60" width="80" height="90" rx="8" stroke="#F59E0B" stroke-width="3" fill="white"/><path d="M75 80h50M75 100h50M75 120h30" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" opacity="0.6"/><circle cx="135" cy="140" r="14" fill="#059669"/><path d="m130 140 3 3 6-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  }
+  function emptyEarningsSVG() {
+    return `<svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="70" fill="#D1FAE5" opacity="0.5"/><ellipse cx="100" cy="130" rx="35" ry="8" stroke="#059669" stroke-width="3" fill="white"/><path d="M65 130V90c0-4 16-8 35-8s35 4 35 8v40" stroke="#059669" stroke-width="3" fill="white"/><path d="M65 105c0 4 16 8 35 8s35-4 35-8" stroke="#059669" stroke-width="3" fill="none"/></svg>`;
+  }
+
   function renderHome() {
     const active = state.activeOrder;
     const pickupName = active?.pickup?.name || active?.items?.[0]?.shopName || 'Store';
@@ -356,14 +416,14 @@ p { font-size: 13px; color: var(--text-light); }
     const pickupDisplay = pickupAddr ? `${pickupName}, ${pickupAddr}` : pickupName;
     const deliverAddr = active?.address?.details || 'Customer address';
 
-    return `<div class="online-toggle"><div><h3>${state.isOnline ? '🟢 You are Online' : '🔴 You are Offline'}</h3><p style="margin-top:4px;">${state.isOnline ? 'Ready to accept orders' : 'Toggle to accept orders'}</p></div><div class="toggle-switch ${state.isOnline?'on':''}" onclick="toggleOnline()"></div></div>
-      ${active ? `<h2>Active Delivery</h2><div class="card order-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><b>#${active.id}</b><span class="earn-badge">Rs ${active.riderEarning}</span></div>
+    return `<div class="online-toggle"><div><h3>${state.isOnline ? '🟢 You are Online' : '🔴 You are Offline'}</h3><p style="margin-top:4px;font-weight:500;">${state.isOnline ? 'Ready to accept orders' : 'Toggle to accept orders'}</p></div><div class="toggle-switch ${state.isOnline?'on':''}" onclick="toggleOnline()"></div></div>
+      ${active ? `<h2>🚀 Active Delivery</h2><div class="card order-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><b style="font-weight:800;font-size:15px;">#${active.id}</b><span class="earn-badge">Rs ${active.riderEarning}</span></div>
         <div class="order-row"><span>Pickup from:</span><span style="max-width:65%;">${pickupDisplay}</span></div>
         <div class="order-row"><span>Deliver to:</span><span style="max-width:65%;">${deliverAddr}</span></div>
         <div class="order-row"><span>Total:</span><span>Rs ${active.total}</span></div>
-        <div id="riderMap" style="margin-top:12px;"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+        <div id="riderMap" style="margin-top:14px;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
           <button type="button" class="btn btn-dark btn-block" onclick="navigateToPickup()">🏪 Navigate to Pickup Location</button>
           <button type="button" class="btn btn-dark btn-block" onclick="navigateToCustomer()">🏠 Navigate to Delivery Location</button>
           ${active.status === 'Rider Assigned' ? `<button type="button" class="btn btn-primary btn-block" onclick="updateOrderStatus('Picked Up')">✅ Confirm Pickup</button>` : ''}
@@ -371,20 +431,20 @@ p { font-size: 13px; color: var(--text-light); }
           ${active.status === 'On the Way' ? `<button type="button" class="btn btn-primary btn-block" onclick="completeDelivery()">🎉 Confirm Delivery</button>` : ''}
         </div>
       </div>` : ''}
-      <h2 style="${active ? 'margin-top:20px;' : ''}">${active ? '🔔 New Orders (' + state.availableOrders.length + ')' : 'Available Orders' + (state.availableOrders.length > 0 ? ' (' + state.availableOrders.length + ')' : '')}</h2>
-      ${state.availableOrders.length === 0 ? `<div class="empty"><span class="big">📭</span>No ready orders yet<br><span style="font-size:12px;">You'll be notified when a store marks an order ready</span></div>` : state.availableOrders.map(o => {
+      <h2 style="${active ? 'margin-top:20px;' : ''}">${active ? '🔔 New Orders (' + state.availableOrders.length + ')' : '📦 Available Orders' + (state.availableOrders.length > 0 ? ' (' + state.availableOrders.length + ')' : '')}</h2>
+      ${state.availableOrders.length === 0 ? `<div class="empty">${emptyDeliverySVG()}<h3>No orders available</h3><p>You'll be notified when a store marks an order ready</p></div>` : state.availableOrders.map(o => {
         const shopName = o.pickup?.name || o.items?.[0]?.shopName || 'Store';
         const shopAddr = o.pickup?.address || '';
         const displayPickup = shopAddr ? `${shopName}, ${shopAddr}` : shopName;
-        return `<div class="card order-card new" style="border-left-color:${active ? '#f59e0b' : '#ef4444'};">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><b>#${o.id}</b><span class="earn-badge">Rs 120</span></div>
+        return `<div class="card order-card new" style="border-left-color:${active ? 'var(--accent)' : 'var(--danger)'};">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><b style="font-weight:800;font-size:15px;">#${o.id}</b><span class="earn-badge">Rs 120</span></div>
           <div class="order-row"><span>Pickup from:</span><span style="max-width:65%;">${displayPickup}</span></div>
           <div class="order-row"><span>Deliver to:</span><span style="max-width:65%;">${o.address?.details || 'Customer'}</span></div>
           <div class="order-row"><span>Items:</span><span>${o.items?.length || 0}</span></div>
-          ${active ? `<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:8px;font-size:12px;margin-top:10px;text-align:center;">⚠️ Finish current delivery first</div>` : `
+          ${active ? `<div style="background:var(--accent-light);color:#92400E;padding:12px;border-radius:10px;font-size:12px;margin-top:12px;text-align:center;font-weight:700;">⚠️ Finish current delivery first</div>` : `
             <div style="display:flex;gap:6px;margin-top:12px;">
-              <button type="button" class="btn btn-outline" style="flex:1;padding:8px 6px;font-size:11px;" onclick="showPickupLocation('${o.id}')">🏪 Show Pickup</button>
-              <button type="button" class="btn btn-outline" style="flex:1;padding:8px 6px;font-size:11px;" onclick="showDeliveryLocation('${o.id}')">🏠 Show Delivery</button>
+              <button type="button" class="btn btn-outline" style="flex:1;padding:10px 6px;font-size:11px;" onclick="showPickupLocation('${o.id}')">🏪 Show Pickup</button>
+              <button type="button" class="btn btn-outline" style="flex:1;padding:10px 6px;font-size:11px;" onclick="showDeliveryLocation('${o.id}')">🏠 Show Delivery</button>
             </div>
             <button type="button" class="btn btn-primary btn-block" style="margin-top:8px;" onclick="acceptOrder('${o.id}')">✅ Accept Order</button>
           `}
@@ -393,7 +453,8 @@ p { font-size: 13px; color: var(--text-light); }
   }
 
   function renderOrders() {
-    return `<h2>Order History</h2>${state.completedOrders.length === 0 ? '<div class="empty"><span class="big">📦</span>No completed orders</div>' : ''}${state.completedOrders.map(o => `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><b>#${o.id}</b><span class="status-chip">Delivered</span></div><p style="font-size:12px;margin-top:6px;">${new Date(o.deliveredAt).toLocaleString()}</p><div class="order-row" style="margin-top:8px;"><span>Earned:</span><span style="color:var(--rider);">Rs ${o.riderEarning}</span></div></div>`).join("")}`;
+    if (state.completedOrders.length === 0) return `<h2>📦 Order History</h2><div class="empty">${emptyHistorySVG()}<h3>No completed orders</h3><p>Your delivery history will appear here</p></div>`;
+    return `<h2>📦 Order History</h2>${state.completedOrders.map(o => `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-weight:800;">#${o.id}</b><span class="status-chip">Delivered</span></div><p style="font-size:11px;margin-top:8px;font-weight:500;">${new Date(o.deliveredAt).toLocaleString()}</p><div class="order-row" style="margin-top:10px;"><span>Earned:</span><span style="color:var(--brand);font-feature-settings:'tnum';">Rs ${o.riderEarning}</span></div></div>`).join("")}`;
   }
 
   function renderEarnings() {
@@ -402,40 +463,41 @@ p { font-size: 13px; color: var(--text-light); }
     const weekAgo = new Date(Date.now() - 7*24*60*60*1000);
     const weekEarnings = state.completedOrders.filter(o => new Date(o.deliveredAt) > weekAgo).reduce((s, o) => s + (o.riderEarning || 0), 0);
     const totalEarnings = state.completedOrders.reduce((s, o) => s + (o.riderEarning || 0), 0);
-    return `<h2>Earnings</h2><div class="stat-grid"><div class="stat-box"><div class="num">Rs ${todayEarnings}</div><div class="lbl">Today</div></div><div class="stat-box"><div class="num">Rs ${weekEarnings}</div><div class="lbl">Week</div></div></div><div class="stat-box" style="margin-bottom:12px;"><div class="num">Rs ${totalEarnings}</div><div class="lbl">Total</div></div><div class="card"><div class="order-row"><span>Deliveries</span><span>${state.completedOrders.length}</span></div><div class="order-row"><span>Avg</span><span>Rs ${state.completedOrders.length ? Math.round(totalEarnings/state.completedOrders.length) : 0}</span></div></div><button type="button" class="btn btn-primary btn-block" onclick="requestPayout()">💸 Request Payout</button>`;
+    if (state.completedOrders.length === 0) return `<h2>💰 Earnings</h2><div class="empty">${emptyEarningsSVG()}<h3>No earnings yet</h3><p>Complete deliveries to start earning</p></div>`;
+    return `<h2>💰 Earnings</h2><div class="stat-grid"><div class="stat-box"><div class="num">Rs ${todayEarnings}</div><div class="lbl">Today</div></div><div class="stat-box"><div class="num">Rs ${weekEarnings}</div><div class="lbl">This Week</div></div></div><div class="stat-box" style="margin-bottom:12px;padding:20px;"><div class="num" style="font-size:28px;">Rs ${totalEarnings}</div><div class="lbl">Total Lifetime</div></div><div class="card"><div class="order-row"><span>Deliveries</span><span>${state.completedOrders.length}</span></div><div class="order-row"><span>Average</span><span>Rs ${state.completedOrders.length ? Math.round(totalEarnings/state.completedOrders.length) : 0}</span></div></div><button class="btn btn-primary btn-block" onclick="requestPayout()">💸 Request Payout</button>`;
   }
 
-  function requestPayout() { if (state.completedOrders.length === 0) return toast("No earnings"); toast("Payout request sent ✅"); }
+  function requestPayout() { if (state.completedOrders.length === 0) return toast("No earnings yet", "warning"); toast("Payout request sent", "success"); }
 
   function renderProfile() {
-    if (!state.rider) return `<div class="card" style="text-align:center;padding:40px 20px;"><div style="font-size:64px;margin-bottom:16px;">🛵</div><h3 style="margin-bottom:8px;">SwatGo Rider</h3><p style="color:var(--text-light);font-size:13px;margin-bottom:20px;">Login to start delivering</p><button type="button" class="btn btn-primary btn-block" onclick="openAuth()">Login / Signup</button></div>`;
-    return `<div class="card"><div style="display:flex;align-items:center;gap:16px;"><div style="width:60px;height:60px;border-radius:50%;background:var(--rider);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;">🛵</div><div><h3>${state.rider.name}</h3><p style="font-size:13px;color:var(--text-light);">${state.rider.phone}</p><p style="font-size:12px;color:var(--rider);margin-top:2px;">⭐ ${state.rider.rating || 5.0} • ${state.completedOrders.length} deliveries</p></div></div></div><div class="card"><div class="order-row" style="cursor:pointer;" onclick="editBike()"><span>🏍️ Bike</span><span>${state.rider.bike || 'Not set'} ›</span></div><div class="order-row"><span>📞 Phone</span><span>${state.rider.phone}</span></div></div><button type="button" class="btn btn-danger btn-block" onclick="logout()">Logout</button>`;
+    if (!state.rider) return `<div class="card" style="text-align:center;padding:40px 20px;"><div style="font-size:64px;margin-bottom:16px;">🛵</div><h3 style="margin-bottom:8px;font-size:18px;">SwatGo Rider</h3><p style="color:var(--text-light);font-size:13px;margin-bottom:20px;font-weight:500;">Login to start delivering</p><button class="btn btn-primary" style="padding:14px 30px;" onclick="openAuth()">Login / Sign Up</button></div>`;
+    return `<div class="card"><div style="display:flex;align-items:center;gap:16px;"><div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;">${(state.rider.name || 'R')[0].toUpperCase()}</div><div><h3 style="font-size:17px;">${state.rider.name}</h3><p style="font-size:13px;color:var(--text-light);font-weight:500;">${state.rider.phone}</p><p style="font-size:12px;color:var(--brand);margin-top:2px;font-weight:700;">⭐ ${state.rider.rating || 5.0} • ${state.completedOrders.length} deliveries</p></div></div></div><div class="card"><div class="order-row" style="cursor:pointer;padding:14px 0;" onclick="editBike()"><span>🏍️ Bike</span><span>${state.rider.bike || 'Not set'} ›</span></div><div class="order-row" style="padding:14px 0;"><span>📞 Phone</span><span>${state.rider.phone}</span></div></div><button class="btn btn-danger btn-block" onclick="logout()">Logout</button>`;
   }
 
-  function editBike() { const bike = prompt("Bike model:", state.rider.bike || ""); if (bike && bike.trim()) { state.rider.bike = bike.trim(); saveLocal(); render(); toast("Updated"); } }
+  function editBike() { const bike = prompt("Bike model:", state.rider.bike || ""); if (bike && bike.trim()) { state.rider.bike = bike.trim(); saveLocal(); render(); toast("Updated", "success"); } }
 
-  function openAuth() { document.getElementById("modalRoot").innerHTML = `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="sheet"><h3>Rider Login</h3><div id="authStep1"><input id="rPhone" placeholder="Phone (03001234567)" type="tel" /><button type="button" class="btn btn-primary btn-block" onclick="checkRider()">Continue</button></div><div id="authStep2" class="hidden"><p style="text-align:center;margin-bottom:16px;">Complete profile</p><input id="rName" placeholder="Full Name" /><input id="rBike" placeholder="Bike (Honda 125)" /><button type="button" class="btn btn-primary btn-block" onclick="completeSignup()">Start Riding</button><button type="button" class="btn btn-outline btn-block" style="margin-top:10px;" onclick="backToStep1()">← Change</button></div><button type="button" class="btn btn-outline btn-block" style="margin-top:10px;" onclick="closeModal()">Cancel</button></div></div>`; setTimeout(() => document.getElementById('rPhone')?.focus(), 100); }
+  function openAuth() { document.getElementById("modalRoot").innerHTML = `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="sheet"><h3>🛵 Rider Login</h3><div id="authStep1"><p style="font-size:13px;color:var(--text-light);margin-bottom:14px;font-weight:500;">Enter your phone number to continue</p><input id="rPhone" placeholder="Phone (03001234567)" type="tel" /><button class="btn btn-primary btn-block" onclick="checkRider()">Continue</button></div><div id="authStep2" class="hidden"><p style="text-align:center;margin-bottom:16px;font-weight:600;">👋 Complete your profile</p><input id="rName" placeholder="Full Name" /><input id="rBike" placeholder="Bike model (e.g. Honda 125)" /><button class="btn btn-primary btn-block" onclick="completeSignup()">Start Riding</button><button class="btn btn-outline btn-block" style="margin-top:10px;" onclick="backToStep1()">← Change Phone</button></div><button class="btn btn-outline btn-block" style="margin-top:10px;" onclick="closeModal()">Cancel</button></div></div>`; setTimeout(() => document.getElementById('rPhone')?.focus(), 100); }
 
   async function checkRider() {
-    const input = document.getElementById('rPhone').value.trim(); if (!input) return toast("Enter phone");
+    const input = document.getElementById('rPhone').value.trim(); if (!input) return toast("Enter phone number", "warning");
     let phone = input.replace(/[\s\-()]/g, "");
     if (phone.startsWith("0")) phone = "+92" + phone.slice(1);
     else if (phone.startsWith("92") && !phone.startsWith("+")) phone = "+" + phone;
     else if (!phone.startsWith("+")) phone = "+92" + phone;
-    window._phone = phone; toast("Checking...");
+    window._phone = phone; toast("Checking...", "info");
     try {
       const snap = await getDoc(doc(db, "riders", phone));
       if (snap.exists()) {
         state.rider = snap.data(); saveLocal(); closeModal();
         state.isFirstOrderLoad = true; state.lastOrderIds = [];
         loadAvailableOrders(); render();
-        toast("Welcome back, " + state.rider.name + "! 🛵");
+        toast("Welcome back, " + state.rider.name, "success");
         requestFcmToken();
       } else {
         document.getElementById('authStep1').classList.add('hidden');
         document.getElementById('authStep2').classList.remove('hidden');
       }
-    } catch (e) { console.error(e); toast("Network error"); }
+    } catch (e) { console.error(e); toast("Network error", "error"); }
   }
 
   function backToStep1() { document.getElementById('authStep2').classList.add('hidden'); document.getElementById('authStep1').classList.remove('hidden'); }
@@ -443,16 +505,16 @@ p { font-size: 13px; color: var(--text-light); }
   async function completeSignup() {
     const name = document.getElementById('rName').value.trim();
     const bike = document.getElementById('rBike').value.trim();
-    if (!name || !bike) return toast("Fill all");
+    if (!name || !bike) return toast("Fill all fields", "warning");
     state.rider = { name, phone: window._phone, bike, rating: 5.0, joinedAt: new Date().toISOString() };
     try {
       await setDoc(doc(db, "riders", state.rider.phone), state.rider);
       saveLocal(); closeModal();
       state.isFirstOrderLoad = true; state.lastOrderIds = [];
       loadAvailableOrders(); render();
-      toast("Welcome, " + name + "! 🎉");
+      toast("Welcome, " + name, "success");
       requestFcmToken();
-    } catch (e) { console.error(e); toast("Failed"); }
+    } catch (e) { console.error(e); toast("Failed to signup", "error"); }
   }
 
   async function logout() {
@@ -463,7 +525,7 @@ p { font-size: 13px; color: var(--text-light); }
     document.getElementById("notifBanner").style.display = "none";
     state.rider = null; state.isOnline = false; state.activeOrder = null; state.completedOrders = []; state.availableOrders = [];
     state.lastOrderIds = []; state.isFirstOrderLoad = true;
-    localStorage.clear(); render(); toast("Logged out");
+    localStorage.clear(); render(); toast("Logged out", "info");
   }
 
   function render() {
