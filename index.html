@@ -112,6 +112,9 @@ p { font-size: 13px; color: var(--text-light); }
   function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(window._t); window._t = setTimeout(() => t.classList.remove("show"), 3000); }
   function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
 
+  // ============================================
+  // FCM
+  // ============================================
   async function requestFcmToken() {
     if (!window.FcmBridge) return;
     window.onFcmTokenReceived = async function(token) {
@@ -141,6 +144,33 @@ p { font-size: 13px; color: var(--text-light); }
     } catch (e) { console.error('FCM: Remove failed:', e); }
   }
 
+  // ============================================
+  // EXTERNAL URL OPENER (Bridge-based)
+  // ============================================
+  function openExternalUrl(url) {
+    console.log('=== OPEN EXTERNAL URL:', url);
+    // Method 1: Direct bridge to Flutter native app (most reliable)
+    if (window.AndroidBridge && typeof window.AndroidBridge.postMessage === 'function') {
+      console.log('=== SENDING VIA BRIDGE ===');
+      try {
+        window.AndroidBridge.postMessage(url);
+        return;
+      } catch (e) { console.error('Bridge failed:', e); }
+    }
+    // Method 2: window.open (works in browsers)
+    if (window.open) {
+      console.log('=== SENDING VIA WINDOW.OPEN ===');
+      window.open(url, '_blank');
+      return;
+    }
+    // Method 3: Direct navigation (last resort)
+    console.log('=== SENDING VIA LOCATION.HREF ===');
+    window.location.href = url;
+  }
+
+  // ============================================
+  // SOUND / VIBRATE
+  // ============================================
   function playOrderSound() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -258,7 +288,7 @@ p { font-size: 13px; color: var(--text-light); }
   }
 
   // ============================================
-  // SHOW & NAVIGATE FUNCTIONS
+  // SHOW & NAVIGATE FUNCTIONS (Bridge-based)
   // ============================================
   function showPickupLocation(orderId) {
     const o = state.availableOrders.find(x => x.id === orderId) || state.activeOrder;
@@ -267,20 +297,25 @@ p { font-size: 13px; color: var(--text-light); }
     const shopName = pickup.name || (o.items && o.items[0] && o.items[0].shopName) || 'Store';
     const shopAddr = pickup.address || '';
     const query = shopAddr ? `${shopName}, ${shopAddr}` : shopName;
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, "_blank");
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    console.log('=== SHOW PICKUP:', url);
+    openExternalUrl(url);
   }
 
   function showDeliveryLocation(orderId) {
     const o = state.availableOrders.find(x => x.id === orderId) || state.activeOrder;
     if (!o) return toast("Order not found");
     const addr = o.address || {};
+    let url;
     if (addr.lat && addr.lng) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${addr.lat},${addr.lng}`, "_blank");
+      url = `https://www.google.com/maps/search/?api=1&query=${addr.lat},${addr.lng}`;
     } else if (addr.details) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr.details)}`, "_blank");
+      url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr.details)}`;
     } else {
-      toast("No delivery address");
+      return toast("No delivery address");
     }
+    console.log('=== SHOW DELIVERY:', url);
+    openExternalUrl(url);
   }
 
   function navigateToPickup() {
@@ -290,22 +325,30 @@ p { font-size: 13px; color: var(--text-light); }
     const shopName = pickup.name || (active.items && active.items[0] && active.items[0].shopName) || 'Store';
     const shopAddr = pickup.address || '';
     const query = shopAddr ? `${shopName}, ${shopAddr}` : shopName;
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`, "_blank");
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}&travelmode=driving`;
+    console.log('=== NAVIGATE TO PICKUP:', url);
+    openExternalUrl(url);
   }
 
   function navigateToCustomer() {
     const active = state.activeOrder;
     if (!active) return toast("No active order");
     const addr = active.address || {};
+    let url;
     if (addr.lat && addr.lng) {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${addr.lat},${addr.lng}`, "_blank");
+      url = `https://www.google.com/maps/dir/?api=1&destination=${addr.lat},${addr.lng}&travelmode=driving`;
     } else if (addr.details) {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr.details)}`, "_blank");
+      url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr.details)}&travelmode=driving`;
     } else {
-      toast("No customer address");
+      return toast("No customer address");
     }
+    console.log('=== NAVIGATE TO CUSTOMER:', url);
+    openExternalUrl(url);
   }
 
+  // ============================================
+  // RENDER HOME
+  // ============================================
   function renderHome() {
     const active = state.activeOrder;
     const pickupName = active?.pickup?.name || active?.items?.[0]?.shopName || 'Store';
@@ -321,11 +364,11 @@ p { font-size: 13px; color: var(--text-light); }
         <div class="order-row"><span>Total:</span><span>Rs ${active.total}</span></div>
         <div id="riderMap" style="margin-top:12px;"></div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-          <button class="btn btn-dark btn-block" onclick="navigateToPickup()">🏪 Navigate to Pickup Location</button>
-          <button class="btn btn-dark btn-block" onclick="navigateToCustomer()">🏠 Navigate to Delivery Location</button>
-          ${active.status === 'Rider Assigned' ? `<button class="btn btn-primary btn-block" onclick="updateOrderStatus('Picked Up')">✅ Confirm Pickup</button>` : ''}
-          ${active.status === 'Picked Up' ? `<button class="btn btn-primary btn-block" onclick="updateOrderStatus('On the Way')">🛵 On the Way</button>` : ''}
-          ${active.status === 'On the Way' ? `<button class="btn btn-primary btn-block" onclick="completeDelivery()">🎉 Confirm Delivery</button>` : ''}
+          <button type="button" class="btn btn-dark btn-block" onclick="navigateToPickup()">🏪 Navigate to Pickup Location</button>
+          <button type="button" class="btn btn-dark btn-block" onclick="navigateToCustomer()">🏠 Navigate to Delivery Location</button>
+          ${active.status === 'Rider Assigned' ? `<button type="button" class="btn btn-primary btn-block" onclick="updateOrderStatus('Picked Up')">✅ Confirm Pickup</button>` : ''}
+          ${active.status === 'Picked Up' ? `<button type="button" class="btn btn-primary btn-block" onclick="updateOrderStatus('On the Way')">🛵 On the Way</button>` : ''}
+          ${active.status === 'On the Way' ? `<button type="button" class="btn btn-primary btn-block" onclick="completeDelivery()">🎉 Confirm Delivery</button>` : ''}
         </div>
       </div>` : ''}
       <h2 style="${active ? 'margin-top:20px;' : ''}">${active ? '🔔 New Orders (' + state.availableOrders.length + ')' : 'Available Orders' + (state.availableOrders.length > 0 ? ' (' + state.availableOrders.length + ')' : '')}</h2>
@@ -340,10 +383,10 @@ p { font-size: 13px; color: var(--text-light); }
           <div class="order-row"><span>Items:</span><span>${o.items?.length || 0}</span></div>
           ${active ? `<div style="background:#fef3c7;color:#92400e;padding:10px;border-radius:8px;font-size:12px;margin-top:10px;text-align:center;">⚠️ Finish current delivery first</div>` : `
             <div style="display:flex;gap:6px;margin-top:12px;">
-              <button class="btn btn-outline" style="flex:1;padding:8px 6px;font-size:11px;" onclick="showPickupLocation('${o.id}')">🏪 Show Pickup</button>
-              <button class="btn btn-outline" style="flex:1;padding:8px 6px;font-size:11px;" onclick="showDeliveryLocation('${o.id}')">🏠 Show Delivery</button>
+              <button type="button" class="btn btn-outline" style="flex:1;padding:8px 6px;font-size:11px;" onclick="showPickupLocation('${o.id}')">🏪 Show Pickup</button>
+              <button type="button" class="btn btn-outline" style="flex:1;padding:8px 6px;font-size:11px;" onclick="showDeliveryLocation('${o.id}')">🏠 Show Delivery</button>
             </div>
-            <button class="btn btn-primary btn-block" style="margin-top:8px;" onclick="acceptOrder('${o.id}')">✅ Accept Order</button>
+            <button type="button" class="btn btn-primary btn-block" style="margin-top:8px;" onclick="acceptOrder('${o.id}')">✅ Accept Order</button>
           `}
         </div>`;
       }).join("")}`;
@@ -359,19 +402,19 @@ p { font-size: 13px; color: var(--text-light); }
     const weekAgo = new Date(Date.now() - 7*24*60*60*1000);
     const weekEarnings = state.completedOrders.filter(o => new Date(o.deliveredAt) > weekAgo).reduce((s, o) => s + (o.riderEarning || 0), 0);
     const totalEarnings = state.completedOrders.reduce((s, o) => s + (o.riderEarning || 0), 0);
-    return `<h2>Earnings</h2><div class="stat-grid"><div class="stat-box"><div class="num">Rs ${todayEarnings}</div><div class="lbl">Today</div></div><div class="stat-box"><div class="num">Rs ${weekEarnings}</div><div class="lbl">Week</div></div></div><div class="stat-box" style="margin-bottom:12px;"><div class="num">Rs ${totalEarnings}</div><div class="lbl">Total</div></div><div class="card"><div class="order-row"><span>Deliveries</span><span>${state.completedOrders.length}</span></div><div class="order-row"><span>Avg</span><span>Rs ${state.completedOrders.length ? Math.round(totalEarnings/state.completedOrders.length) : 0}</span></div></div><button class="btn btn-primary btn-block" onclick="requestPayout()">💸 Request Payout</button>`;
+    return `<h2>Earnings</h2><div class="stat-grid"><div class="stat-box"><div class="num">Rs ${todayEarnings}</div><div class="lbl">Today</div></div><div class="stat-box"><div class="num">Rs ${weekEarnings}</div><div class="lbl">Week</div></div></div><div class="stat-box" style="margin-bottom:12px;"><div class="num">Rs ${totalEarnings}</div><div class="lbl">Total</div></div><div class="card"><div class="order-row"><span>Deliveries</span><span>${state.completedOrders.length}</span></div><div class="order-row"><span>Avg</span><span>Rs ${state.completedOrders.length ? Math.round(totalEarnings/state.completedOrders.length) : 0}</span></div></div><button type="button" class="btn btn-primary btn-block" onclick="requestPayout()">💸 Request Payout</button>`;
   }
 
   function requestPayout() { if (state.completedOrders.length === 0) return toast("No earnings"); toast("Payout request sent ✅"); }
 
   function renderProfile() {
-    if (!state.rider) return `<div class="card" style="text-align:center;padding:40px 20px;"><div style="font-size:64px;margin-bottom:16px;">🛵</div><h3 style="margin-bottom:8px;">SwatGo Rider</h3><p style="color:var(--text-light);font-size:13px;margin-bottom:20px;">Login to start delivering</p><button class="btn btn-primary btn-block" onclick="openAuth()">Login / Signup</button></div>`;
-    return `<div class="card"><div style="display:flex;align-items:center;gap:16px;"><div style="width:60px;height:60px;border-radius:50%;background:var(--rider);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;">🛵</div><div><h3>${state.rider.name}</h3><p style="font-size:13px;color:var(--text-light);">${state.rider.phone}</p><p style="font-size:12px;color:var(--rider);margin-top:2px;">⭐ ${state.rider.rating || 5.0} • ${state.completedOrders.length} deliveries</p></div></div></div><div class="card"><div class="order-row" style="cursor:pointer;" onclick="editBike()"><span>🏍️ Bike</span><span>${state.rider.bike || 'Not set'} ›</span></div><div class="order-row"><span>📞 Phone</span><span>${state.rider.phone}</span></div></div><button class="btn btn-danger btn-block" onclick="logout()">Logout</button>`;
+    if (!state.rider) return `<div class="card" style="text-align:center;padding:40px 20px;"><div style="font-size:64px;margin-bottom:16px;">🛵</div><h3 style="margin-bottom:8px;">SwatGo Rider</h3><p style="color:var(--text-light);font-size:13px;margin-bottom:20px;">Login to start delivering</p><button type="button" class="btn btn-primary btn-block" onclick="openAuth()">Login / Signup</button></div>`;
+    return `<div class="card"><div style="display:flex;align-items:center;gap:16px;"><div style="width:60px;height:60px;border-radius:50%;background:var(--rider);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;">🛵</div><div><h3>${state.rider.name}</h3><p style="font-size:13px;color:var(--text-light);">${state.rider.phone}</p><p style="font-size:12px;color:var(--rider);margin-top:2px;">⭐ ${state.rider.rating || 5.0} • ${state.completedOrders.length} deliveries</p></div></div></div><div class="card"><div class="order-row" style="cursor:pointer;" onclick="editBike()"><span>🏍️ Bike</span><span>${state.rider.bike || 'Not set'} ›</span></div><div class="order-row"><span>📞 Phone</span><span>${state.rider.phone}</span></div></div><button type="button" class="btn btn-danger btn-block" onclick="logout()">Logout</button>`;
   }
 
   function editBike() { const bike = prompt("Bike model:", state.rider.bike || ""); if (bike && bike.trim()) { state.rider.bike = bike.trim(); saveLocal(); render(); toast("Updated"); } }
 
-  function openAuth() { document.getElementById("modalRoot").innerHTML = `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="sheet"><h3>Rider Login</h3><div id="authStep1"><input id="rPhone" placeholder="Phone (03001234567)" type="tel" /><button class="btn btn-primary btn-block" onclick="checkRider()">Continue</button></div><div id="authStep2" class="hidden"><p style="text-align:center;margin-bottom:16px;">Complete profile</p><input id="rName" placeholder="Full Name" /><input id="rBike" placeholder="Bike (Honda 125)" /><button class="btn btn-primary btn-block" onclick="completeSignup()">Start Riding</button><button class="btn btn-outline btn-block" style="margin-top:10px;" onclick="backToStep1()">← Change</button></div><button class="btn btn-outline btn-block" style="margin-top:10px;" onclick="closeModal()">Cancel</button></div></div>`; setTimeout(() => document.getElementById('rPhone')?.focus(), 100); }
+  function openAuth() { document.getElementById("modalRoot").innerHTML = `<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="sheet"><h3>Rider Login</h3><div id="authStep1"><input id="rPhone" placeholder="Phone (03001234567)" type="tel" /><button type="button" class="btn btn-primary btn-block" onclick="checkRider()">Continue</button></div><div id="authStep2" class="hidden"><p style="text-align:center;margin-bottom:16px;">Complete profile</p><input id="rName" placeholder="Full Name" /><input id="rBike" placeholder="Bike (Honda 125)" /><button type="button" class="btn btn-primary btn-block" onclick="completeSignup()">Start Riding</button><button type="button" class="btn btn-outline btn-block" style="margin-top:10px;" onclick="backToStep1()">← Change</button></div><button type="button" class="btn btn-outline btn-block" style="margin-top:10px;" onclick="closeModal()">Cancel</button></div></div>`; setTimeout(() => document.getElementById('rPhone')?.focus(), 100); }
 
   async function checkRider() {
     const input = document.getElementById('rPhone').value.trim(); if (!input) return toast("Enter phone");
@@ -451,7 +494,7 @@ p { font-size: 13px; color: var(--text-light); }
   if (state.rider) requestFcmToken();
   if (state.activeOrder) startLocationBroadcast(state.activeOrder.id);
 
-  window.toggleOnline = toggleOnline; window.acceptOrder = acceptOrder; window.updateOrderStatus = updateOrderStatus; window.completeDelivery = completeDelivery; window.openGoogleMapsNav = openGoogleMapsNav; window.navigateToPickup = navigateToPickup; window.navigateToCustomer = navigateToCustomer; window.showPickupLocation = showPickupLocation; window.showDeliveryLocation = showDeliveryLocation; window.openAuth = openAuth; window.checkRider = checkRider; window.backToStep1 = backToStep1; window.completeSignup = completeSignup; window.logout = logout; window.editBike = editBike; window.requestPayout = requestPayout; window.closeModal = closeModal; window.toast = toast; window.goToAvailableOrders = goToAvailableOrders;
+  window.toggleOnline = toggleOnline; window.acceptOrder = acceptOrder; window.updateOrderStatus = updateOrderStatus; window.completeDelivery = completeDelivery; window.navigateToPickup = navigateToPickup; window.navigateToCustomer = navigateToCustomer; window.showPickupLocation = showPickupLocation; window.showDeliveryLocation = showDeliveryLocation; window.openExternalUrl = openExternalUrl; window.openAuth = openAuth; window.checkRider = checkRider; window.backToStep1 = backToStep1; window.completeSignup = completeSignup; window.logout = logout; window.editBike = editBike; window.requestPayout = requestPayout; window.closeModal = closeModal; window.toast = toast; window.goToAvailableOrders = goToAvailableOrders;
 </script>
 </body>
 </html>
